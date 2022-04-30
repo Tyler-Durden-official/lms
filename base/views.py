@@ -72,7 +72,7 @@ def view_issued_book(request):
         students = list(models.Student.objects.filter(user=i.student_id))
         count=0
         for l in books:
-            t=(issuedBooks[0].id,students[count].user,students[count].user_id,books[count].name,books[count].book_id,issuedBooks[0].issued_date,issuedBooks[0].expiry_date,fine)
+            t=(i.id,students[count].user,students[count].user_id,books[count].name,books[count].book_id,issuedBooks[0].issued_date,issuedBooks[0].expiry_date,fine)
             count+=1
             details.append(t)
     return render(request, "view_issued_book.html", {'issuedBooks':issuedBooks, 'details':details})
@@ -122,19 +122,19 @@ def edit_profile(request):
     return render(request, "edit_profile.html")
 
 def delete_book(request, myid):
-    books = Book.objects.filter(id=myid)
+    books = Book.objects.filter(id=myid).first()
+    issued_books = IssuedBook.objects.filter(book_id=books.book_id)
+    if issued_books:
+        return HttpResponse("Error: The issued books are not returned by students yet. Try again after retrieving them.")
     books.delete()
     return redirect("/view_books_admin")
 
 def delete_student(request, myid):
     students = Student.objects.filter(id=myid)
     student_name = students.first().user
-    issued_books = IssuedBook.objects.filter(student_id=myid).first()
-    for issued_book in issued_books:
-        book = Book.objects.filter(book_id=issued_book.book_id).first()
-        book.availability += 1
-        book.save()
-    issued_books.delete()
+    issued_books = IssuedBook.objects.filter(student_id=myid)
+    if issued_books:
+        return HttpResponse("Error: The student has one or more issued books to be returned. Try again after retrieving them.")
     students.delete()
     u = User.objects.get(username=student_name)
     u.delete()
