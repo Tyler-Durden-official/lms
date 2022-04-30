@@ -70,35 +70,32 @@ def view_issued_book(request):
             fine=day*5
         books = list(models.Book.objects.filter(book_id=i.book_id))
         students = list(models.Student.objects.filter(user=i.student_id))
-        i=0
+        count=0
         for l in books:
-            t=(students[i].user,students[i].user_id,books[i].name,books[i].book_id,issuedBooks[0].issued_date,issuedBooks[0].expiry_date,fine)
-            i=i+1
+            t=(issuedBooks[0].id,students[count].user,students[count].user_id,books[count].name,books[count].book_id,issuedBooks[0].issued_date,issuedBooks[0].expiry_date,fine)
+            count+=1
             details.append(t)
     return render(request, "view_issued_book.html", {'issuedBooks':issuedBooks, 'details':details})
 
 @login_required(login_url = '/student_login')
 def student_issued_books(request):
-    student = Student.objects.filter(user_id=request.user.id)
-    issuedBooks = IssuedBook.objects.filter(student_id=student.first().user_id)
+    student = Student.objects.filter(user_id=request.user.id).first()
+    issuedBooks = IssuedBook.objects.filter(student_id=student.user_id)
     li1 = []
     li2 = []
 
     for i in issuedBooks:
         books = Book.objects.filter(book_id=i.book_id)
         for book in books:
-            t=(book.name, book.author)
+            days=(date.today()-i.issued_date)
+            d=days.days
+            fine=0
+            if d>15:
+                day=d-14
+                fine=day*5
+            t=(book.name, book.author, issuedBooks[0].issued_date, issuedBooks[0].expiry_date, fine)
             li1.append(t)
-
-        days=(date.today()-i.issued_date)
-        d=days.days
-        fine=0
-        if d>15:
-            day=d-14
-            fine=day*5
-        t=(issuedBooks[0].issued_date, issuedBooks[0].expiry_date, fine)
-        li2.append(t)
-    return render(request,'student_issued_books.html',{'li1':li1, 'li2':li2})
+    return render(request,'student_issued_books.html',{'li1':li1})
 
 @login_required(login_url = '/student_login')
 def profile(request):
@@ -131,16 +128,24 @@ def delete_book(request, myid):
 
 def delete_student(request, myid):
     students = Student.objects.filter(id=myid)
+    student_name = students.first().user
+    issued_books = IssuedBook.objects.filter(student_id=myid)
+    for issued_book in issued_books:
+        book = models.Book.objects.filter(book_id=issued_book.book_id).first()
+        book.availability += 1
+        book.save()
+    issued_books.delete()
     students.delete()
-    u = User.objects.get(id=myid)
+    u = User.objects.get(username=student_name)
+    u.delete()
     return redirect("/view_students")
 
 def delete_issue(request, myid):
     book_issued = IssuedBook.objects.filter(id=myid)
-    book_issued.delete()
     book = models.Book.objects.filter(book_id=book_issued.book_id).first()
     book.availability += 1
     book.save()
+    book_issued.delete()
     return redirect("/view_issued_book")
 
 def change_password(request):

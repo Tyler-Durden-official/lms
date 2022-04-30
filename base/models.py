@@ -17,6 +17,7 @@ class Book(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # name = models.CharField(max_length=30)
     branch = models.CharField(max_length=10)
     roll_no = models.CharField(max_length=3, blank=True)
     phone = models.CharField(max_length=10, blank=True)
