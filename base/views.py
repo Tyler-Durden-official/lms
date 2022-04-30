@@ -166,6 +166,9 @@ def change_password(request):
             pass
     return render(request, "change_password.html")
 
+def dashboard(request):
+    return render(request, "admin_home.html")
+
 def student_registration(request):
     if request.method == "POST":
         username = request.POST['username']
@@ -217,7 +220,7 @@ def admin_login(request):
         if user is not None:
             login(request, user)
             if request.user.is_superuser:
-                return redirect("/add_book")
+                return redirect("/admin_home")
             else:
                 return HttpResponse("You are not an admin.")
         else:
