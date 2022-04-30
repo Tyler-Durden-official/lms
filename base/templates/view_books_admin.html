@@ -27,7 +27,7 @@
                 <td>{{book.book_id}}</td>
                 <td>{{book.category}}</td>
                 <td>{{book.availability}}</td>
-                <td><a href="/delete_book/{{book.id}}/" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this book?')">Delete</a></td>
+                <td><a href="/delete_book/{{book.id}}/" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this book? Are all the books retrieved from students?')">Delete</a></td>
             </tr>
             {% endfor %}
         </tbody>

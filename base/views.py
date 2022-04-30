@@ -129,9 +129,9 @@ def delete_book(request, myid):
 def delete_student(request, myid):
     students = Student.objects.filter(id=myid)
     student_name = students.first().user
-    issued_books = IssuedBook.objects.filter(student_id=myid)
+    issued_books = IssuedBook.objects.filter(student_id=myid).first()
     for issued_book in issued_books:
-        book = models.Book.objects.filter(book_id=issued_book.book_id).first()
+        book = Book.objects.filter(book_id=issued_book.book_id).first()
         book.availability += 1
         book.save()
     issued_books.delete()
@@ -141,8 +141,8 @@ def delete_student(request, myid):
     return redirect("/view_students")
 
 def delete_issue(request, myid):
-    book_issued = IssuedBook.objects.filter(id=myid)
-    book = models.Book.objects.filter(book_id=book_issued.book_id).first()
+    book_issued = IssuedBook.objects.filter(id=myid).first()
+    book = Book.objects.filter(book_id=book_issued.book_id).first()
     book.availability += 1
     book.save()
     book_issued.delete()
