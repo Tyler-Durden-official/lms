@@ -279,3 +279,6 @@ def view_requested_book(request):
             count+=1
             details.append(t)
     return render(request, "view_requested_book.html", {'requestedBooks':requestedBooks, 'details':details})
+
+def permission_manager(request):
+    return render(request, "permission_manager")
