@@ -231,3 +231,51 @@ def admin_login(request):
 def Logout(request):
     logout(request)
     return redirect ("/")
+
+def request_book(request):
+    form = forms.RequestBookForm()
+    if request.method == "POST":
+        form = forms.RequestBookForm(request.POST)
+        book_name = request.POST['book_name']
+        author_name = request.POST['author_name']
+        reason = request.POST['reason']
+        if form.is_valid():
+            obj = models.RequestBook()
+            obj.student_id = request.user.id
+            student = models.Student.objects.filter(id = obj.student_id).first()
+            obj.book_name = book_name
+            obj.author_name = author_name
+            obj.reason = reason
+            obj.student_dept = student.branch
+            obj.save()
+            alert = True
+            return render(request, "request_book.html", {'obj':obj, 'alert':alert})
+    return render(request, "request_book.html", {'form':form})
+
+@login_required(login_url = '/student_login')
+def student_requested_books(request):
+    student = Student.objects.filter(user_id=request.user.id).first()
+    requestedBooks = RequestBook.objects.filter(student_id=student.user_id)
+    li1 = []
+    for i in requestedBooks:
+        if i.status:
+            status = "Granted"
+        else:
+            status = "Not Granted"
+        t=(i.book_name, i.author_name, status)
+        li1.append(t)
+    return render(request,'student_requested_books.html',{'li1':li1})
+
+@login_required(login_url = '/admin_login')
+def view_requested_book(request):
+    requestedBooks = RequestBook.objects.all()
+    details = []
+    for i in requestedBooks:
+        books = list(RequestBook.objects.filter(student_id=i.student_id))
+        students = list(Student.objects.filter(user=i.student_id))
+        count=0
+        for l in books:
+            t=(students[count].user,students[count].user_id,students[count].branch,i.book_name,i.author_name,i.date_of_request,i.status)
+            count+=1
+            details.append(t)
+    return render(request, "view_requested_book.html", {'requestedBooks':requestedBooks, 'details':details})

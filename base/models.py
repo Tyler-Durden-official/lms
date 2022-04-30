@@ -1,3 +1,4 @@
+from urllib import request
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime,timedelta
@@ -35,3 +36,12 @@ class IssuedBook(models.Model):
     book_id = models.CharField(max_length=13)
     issued_date = models.DateField(auto_now=True)
     expiry_date = models.DateField(default=expiry)
+
+class RequestBook(models.Model):
+    student_id = models.CharField(max_length=100, blank=True)
+    student_dept = models.CharField(max_length=100, blank=True)
+    book_name = models.CharField(max_length=100, blank=True)
+    author_name = models.CharField(max_length=100, blank=True)
+    reason = models.CharField(max_length=600, blank=True)
+    status = models.BooleanField(default=False)
+    date_of_request = models.DateField(auto_now=True)
