@@ -9,7 +9,7 @@ from matplotlib.style import available
 class Book(models.Model):
     name = models.CharField(max_length=200)
     author = models.CharField(max_length=200)
-    book_id = models.PositiveIntegerField()
+    book_id = models.PositiveIntegerField(unique=True)
     category = models.CharField(max_length=50)
     availability = models.IntegerField(default=0)
 
@@ -43,5 +43,10 @@ class RequestBook(models.Model):
     book_name = models.CharField(max_length=100, blank=True)
     author_name = models.CharField(max_length=100, blank=True)
     reason = models.CharField(max_length=600, blank=True)
-    status = models.BooleanField(default=False)
+    status = models.CharField(max_length=100, default="Pending")
     date_of_request = models.DateField(auto_now=True)
+
+class HoD(models.Model):
+    name = models.CharField(max_length=100, blank=True)
+    branch = models.CharField(max_length=100, blank=True)
+    email = models.CharField(max_length=100, blank=True)

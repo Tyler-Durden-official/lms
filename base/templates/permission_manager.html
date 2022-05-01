@@ -4,4 +4,29 @@
 {% block css %}
 {% endblock %}
 {% block body %}
-{% endblock body %}
+<div class="container mt-4">
+    <h1 class="text-center"><u>All Requested Books</u></h1>
+    <table class="table table-hover" id="example">
+        <thead>
+            <tr class="text-center">
+                <th>Sr.No</th>
+                <th>Book Name</th>
+                <th>Author Name</th>
+                <th>Branch</th>
+                <th>Ask for permission<th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in books %}
+            <tr class="text-center">
+                <td>{{forloop.counter}}.</td>
+                <td>{{i.book_name}}</td>
+                <td>{{i.author_name}}</td>
+                <td>{{i.student_dept}}</td>
+                <td><a href="/send_email/{{i.student_dept}}" class="btn btn-warning">Send Email to HoD</a></td>                
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+{% endblock %}

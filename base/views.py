@@ -16,6 +16,9 @@ def add_book(request):
         name = request.POST['name']
         author = request.POST['author']
         book_id = request.POST['book_id']
+        books = Book.objects.filter(book_id=book_id)
+        if books:
+            return HttpResponse("Enter unique book id and try again")
         category = request.POST['category']
         availability = request.POST['availability']
         books = Book.objects.create(name=name, author=author, book_id=book_id, category=category, availability=availability)
@@ -109,7 +112,7 @@ def edit_profile(request):
         phone = request.POST['phone']
         branch = request.POST['branch']
         roll_no = request.POST['roll_no']
-        image = request.FILES['image']
+        image = request.POST['image']
         student.user.email = email
         student.phone = phone
         student.branch = branch
@@ -128,6 +131,34 @@ def delete_book(request, myid):
         return HttpResponse("Error: The issued books are not returned by students yet. Try again after retrieving them.")
     books.delete()
     return redirect("/view_books_admin")
+
+def delete_request(request, myid):
+    request_book = RequestBook.objects.filter(id=myid)
+    request_book.delete()
+    return redirect("/view_requested_book")
+
+def accept_request(request, myid):
+    request_book = RequestBook.objects.filter(id=myid).first()
+    request_book.status = "Accepted"
+    request_book.save()
+    return redirect("/view_requested_book")
+
+def reject_request(request, myid):
+    request_book = RequestBook.objects.filter(id=myid).first()
+    request_book.status = "Rejected"
+    request_book.save()
+    return redirect("/view_requested_book")
+
+def cancel_request(request, myid):
+    request_book = RequestBook.objects.filter(id=myid).first()
+    request_book.delete()
+    return redirect("/student_requested_books")
+
+def student_track_request(request, myid):
+    return render(request, "student_track_request.html", {'id' : myid})
+
+def admin_track_request(request, myid):
+    return render(request, "admin_track_request.html",{'id':myid})
 
 def delete_student(request, myid):
     students = Student.objects.filter(id=myid)
@@ -241,8 +272,8 @@ def request_book(request):
         reason = request.POST['reason']
         if form.is_valid():
             obj = models.RequestBook()
-            obj.student_id = request.user.id
-            student = models.Student.objects.filter(id = obj.student_id).first()
+            student = models.Student.objects.filter(user_id = request.user.id).first()
+            obj.student_id = student.id
             obj.book_name = book_name
             obj.author_name = author_name
             obj.reason = reason
@@ -255,14 +286,13 @@ def request_book(request):
 @login_required(login_url = '/student_login')
 def student_requested_books(request):
     student = Student.objects.filter(user_id=request.user.id).first()
-    requestedBooks = RequestBook.objects.filter(student_id=student.user_id)
+    requestedBooks = RequestBook.objects.filter(student_id=student.id)
     li1 = []
     for i in requestedBooks:
-        if i.status:
-            status = "Granted"
-        else:
-            status = "Not Granted"
-        t=(i.book_name, i.author_name, status)
+        delete_button = False
+        if i.status == "Rejected":
+            delete_button = True
+        t=(i.id,i.book_name, i.author_name, i.status, delete_button)
         li1.append(t)
     return render(request,'student_requested_books.html',{'li1':li1})
 
@@ -270,15 +300,60 @@ def student_requested_books(request):
 def view_requested_book(request):
     requestedBooks = RequestBook.objects.all()
     details = []
+    students = set()
     for i in requestedBooks:
-        books = list(RequestBook.objects.filter(student_id=i.student_id))
-        students = list(Student.objects.filter(user=i.student_id))
-        count=0
+        students.add(Student.objects.filter(id=i.student_id).first())
+    for i in students:
+        books = RequestBook.objects.filter(student_id=i.id)
+        count = 0
         for l in books:
-            t=(students[count].user,students[count].user_id,students[count].branch,i.book_name,i.author_name,i.date_of_request,i.status)
-            count+=1
+            t=(i.user,i.id,i.branch,books[count].book_name,books[count].author_name,books[count].date_of_request,books[count].status,books[count].id)
+            count += 1
             details.append(t)
     return render(request, "view_requested_book.html", {'requestedBooks':requestedBooks, 'details':details})
 
+@login_required(login_url = '/admin_login')
 def permission_manager(request):
-    return render(request, "permission_manager")
+    requested_books = RequestBook.objects.filter(status = "Pending")
+    return render(request, "permission_manager.html", {"books":requested_books})
+
+def email_function():
+    pass
+
+def send_email(request, branch):
+    requested_books = RequestBook.objects.filter(status = "Pending", student_dept = branch)
+    for book in requested_books:
+        branch = book.student_dept
+        email = HoD.objects.filter(branch=branch).first()
+        email_function()
+    return redirect("/permission_manager")
+
+@login_required(login_url = '/admin_login')
+def view_hods(request):
+    hods = HoD.objects.all()
+    return render(request, "view_hods.html", {'hods':hods})
+
+@login_required(login_url = '/admin_login')
+def add_hod(request):
+    if request.method == "POST":
+        name = request.POST['name']
+        branch = request.POST['branch']
+        email = request.POST['email']
+        hod = HoD.objects.create(name=name, email=email, branch=branch)
+        hod.save()
+        alert = True
+        return render(request, "view_hods.html")
+    return render(request, "view_hods.html")
+
+@login_required(login_url = '/admin_login')
+def edit_hod(request, myid):
+    hod = HoD.objects.get(id=myid)
+    if request.method == "POST":
+        email = request.POST['email']
+        name = request.POST['name']
+        hod.email = email
+        hod.name = name
+        hod.save()
+        alert = True
+        return render(request, "view_hods.html")
+    return render(request, "view_hods.html")
