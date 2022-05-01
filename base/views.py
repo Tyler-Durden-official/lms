@@ -113,11 +113,16 @@ def edit_profile(request):
         branch = request.POST['branch']
         roll_no = request.POST['roll_no']
         image = request.POST['image']
-        student.user.email = email
-        student.phone = phone
-        student.branch = branch
-        student.roll_no = roll_no
-        student.image = image
+        if email:
+            student.user.email = email
+        if phone:
+            student.phone = phone
+        if branch:
+            student.branch = branch
+        if roll_no:
+            student.roll_no = roll_no
+        if image:
+            student.image = image
         student.user.save()
         student.save()
         alert = True
@@ -338,12 +343,15 @@ def add_hod(request):
     if request.method == "POST":
         name = request.POST['name']
         branch = request.POST['branch']
+        hods = HoD.objects.filter(branch=branch)
+        if hods:
+            return HttpResponse("Error: There is already a HoD for this department. If you want to change the HoD details for a branch, try going to view HoDs and edit your pick.")
         email = request.POST['email']
         hod = HoD.objects.create(name=name, email=email, branch=branch)
         hod.save()
         alert = True
-        return render(request, "view_hods.html")
-    return render(request, "view_hods.html")
+        return redirect("/view_hods")
+    return render(request, "add_hod.html")
 
 @login_required(login_url = '/admin_login')
 def edit_hod(request, myid):
@@ -355,5 +363,5 @@ def edit_hod(request, myid):
         hod.name = name
         hod.save()
         alert = True
-        return render(request, "view_hods.html")
-    return render(request, "view_hods.html")
+        return redirect("/view_hods")
+    return render(request, "edit_hod.html")
